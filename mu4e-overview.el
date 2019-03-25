@@ -263,10 +263,7 @@ passed to CALLBACK will be 0."
               (push folder (mu4e-overview-folder-children parent-folder))
               (setq folders (delete folder folders)))))))
 
-    (setq mu4e-overview-folders folders))
-
-  ;; (mu4e-overview--insert-entries)
-  )
+    (setq mu4e-overview-folders folders)))
 
 (defun mu4e-overview-action (button &optional unread-only)
   "Show mu4e headers view for folder associated with BUTTON.
