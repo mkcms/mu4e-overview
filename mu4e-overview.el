@@ -286,21 +286,20 @@ If N is provided, go to Nth next unread folder.
 If N is negative, go to -Nth previous unread folder."
   (interactive "p")
   (or n (setq n 1))
-  (cl-labels ((unread-p
-               ()
-               (when-let*
-                   ((folder (get-text-property (point) 'mu4e-overview-folder))
-                    (count (mu4e-overview-folder-unread-count folder)))
-                 (cl-plusp count))))
-    (let ((saved-point (point))
-          (amnt (cl-signum n)))
-      (cl-loop if (zerop n) do (cl-return)
-               do (forward-line amnt)
-               until (if (cl-plusp n) (eobp) (bobp))
-               if (unread-p) do (cl-decf n amnt)
-               finally do (unless (unread-p)
-                            (goto-char saved-point)
-                            (error "No more unread folders"))))))
+  (let ((saved-point (point))
+        (amnt (cl-signum n))
+        (end (if (cl-plusp n) (point-max) (point-min))))
+    (cl-loop until (or (zerop n) (= (point) end))
+             do (forward-line amnt)
+             (when-let*
+                 ((folder
+                   (get-text-property (point) 'mu4e-overview-folder))
+                  (count (mu4e-overview-folder-unread-count folder)))
+               (when (cl-plusp count)
+                 (cl-decf n amnt))))
+    (unless (zerop n)
+      (goto-char saved-point)
+      (error "No more unread folders"))))
 
 (defun mu4e-overview-previous-unread-folder (&optional n)
   "Go to previous unread folder.
