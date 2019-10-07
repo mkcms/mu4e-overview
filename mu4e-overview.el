@@ -329,10 +329,15 @@ The buffer shows a hierarchy of maildirs used by `mu4e'.
 The available keybindings are:
 \\{mu4e-overview-mode-map}"
   (interactive)
-  (with-current-buffer (get-buffer-create "*mu4e overview*")
-    (mu4e-overview-mode)
-    (mu4e-overview-update)
-    (pop-to-buffer (current-buffer))))
+  (display-buffer-in-side-window
+   (with-current-buffer (get-buffer-create "*mu4e overview*")
+     (mu4e-overview-mode)
+     (mu4e-overview-update)
+     (pop-to-buffer (current-buffer))) 
+   (list (cons 'side 'right)
+         (cons 'slot 0)
+         (cons 'window-parameters
+               (list (cons 'no-delete-other-windows t))))))
 
 (provide 'mu4e-overview)
 ;;; mu4e-overview.el ends here
