@@ -269,7 +269,11 @@ passed to CALLBACK will be 0."
                        :name parent-name
                        :maildir nil))
                 (push parent-folder folders))
-              (push folder (mu4e-overview-folder-children parent-folder))
+              (setf (mu4e-overview-folder-children parent-folder)
+                    (cl-sort
+                     (cons folder
+                           (mu4e-overview-folder-children parent-folder))
+                     #'string< :key #'mu4e-overview-folder-name))
               (setq folders (delete folder folders)))))))
 
     (setq mu4e-overview-folders folders)))
