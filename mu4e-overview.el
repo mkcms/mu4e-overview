@@ -335,4 +335,7 @@ The available keybindings are:
     (pop-to-buffer (current-buffer))))
 
 (provide 'mu4e-overview)
+;; Local Variables:
+;; indent-tabs-mode: nil
+;; End:
 ;;; mu4e-overview.el ends here
