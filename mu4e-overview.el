@@ -66,6 +66,10 @@
   "List of characters used to split maildir paths into folders."
   :type '(repeat character))
 
+(defcustom mu4e-overview-indent-width 2
+  "Number of characters that subfolders are indented per level."
+  :type 'integer)
+
 (defface mu4e-overview-folder
   '((t))
   "Base face used for all folders.")
@@ -103,7 +107,8 @@ inserted entry."
         (count (mu4e-overview-folder-count folder))
         (unread-count (mu4e-overview-folder-unread-count folder))
         (face 'mu4e-overview-folder))
-    (insert (make-string depth ?\ ) (mu4e-overview-folder-name folder))
+    (insert (make-string (* depth mu4e-overview-indent-width) ?\s)
+            (mu4e-overview-folder-name folder))
     (cond ((null maildir)
            (setq face 'mu4e-overview-group-folder))
           ((or (null count) (null unread-count))
