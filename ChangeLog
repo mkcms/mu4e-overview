@@ -1,0 +1,9 @@
+2019-10-20  Michał Krzywkowski  <k.michal@zoho.com>
+
+	Version 0.1.0
+
+	New option: mu4e-overview-maildir-separators controls which
+	characters are used to split maildir paths into folders.
+
+	New option: mu4e-overview-indent-width controls the indentation
+	level of nested folders.
