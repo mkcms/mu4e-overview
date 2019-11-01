@@ -327,6 +327,9 @@ If argument N is provided, go to Nth previous unread folder."
 
 (defvar mu4e-overview-mode-map
   (let ((map (copy-keymap button-buffer-map)))
+    (set-keymap-parent map mu4e-main-mode-map)
+    (define-key map "q" #'bury-buffer)
+    (define-key map "?" #'mu4e~main-menu)
     (define-key map "n" #'next-line)
     (define-key map "]" #'mu4e-overview-next-unread-folder)
     (define-key map "p" #'previous-line)
