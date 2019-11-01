@@ -353,7 +353,7 @@ The available keybindings are:
   (with-current-buffer (get-buffer-create "*mu4e overview*")
     (mu4e-overview-mode)
     (mu4e-overview-update)
-    (pop-to-buffer (current-buffer))))
+    (display-buffer (current-buffer))))
 
 (provide 'mu4e-overview)
 ;; Local Variables:
