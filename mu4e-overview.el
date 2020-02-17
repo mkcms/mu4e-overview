@@ -347,8 +347,9 @@ The buffer shows a hierarchy of maildirs used by `mu4e'.
 The available keybindings are:
 \\{mu4e-overview-mode-map}"
   (interactive)
-  (unless mu4e~server-props
-    (mu4e~start))
+  (mu4e~start 'mu4e-overview-internal))
+
+(defun mu4e-overview-internal ()
   (with-current-buffer (get-buffer-create "*mu4e overview*")
     (mu4e-overview-mode)
     (mu4e-overview-update)
