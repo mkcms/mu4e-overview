@@ -142,6 +142,14 @@ inserted entry."
 (defvar mu4e-overview--processes nil
   "List of running or stopped 'mu find' processes.")
 
+(defvar mu4e-overview-parallel-processes 5
+  "Start at most this many processes in parallel.
+Setting this to a higher value can significantly speedup the
+update process.  However, spawning many processes at once can
+lead to resource exhaustion and even cause the update process to
+fail, because the system file descriptor limit can quickly be
+reached.")
+
 (defun mu4e-overview--count (maildir callback)
   "Count number of total/unread messages in MAILDIR and call CALLBACK.
 This function starts two mu processes which find all/unread
@@ -157,39 +165,49 @@ some time.
 CALLBACK is called regardless if the processes finished
 successfully.  If any process failed or timed out, the argument
 passed to CALLBACK will be 0."
-  (let (unread-count total-count)
-    (dolist (unread-only '(t nil))
-      (let ((count 0)
-            (output "")
-            (process
-             (start-process-shell-command
-              "mu4e-overview-maildir-counter" nil
-              (format "%s find -f p '%s' %s | wc -l"
-                      mu4e-mu-binary
-                      (format "maildir:/%s" maildir)
-                      (if unread-only " and flag:unread" "")))))
+  (setq mu4e-overview--processes
+        (cl-remove-if-not #'process-live-p mu4e-overview--processes))
+  (cond
+   ;; Limit the number of spawned parallel processes to avoid reaching open
+   ;; file limit on some systems. (gh#8)
+   ((>= (cl-count-if #'process-live-p mu4e-overview--processes)
+        mu4e-overview-parallel-processes)
+    ;; If we can't spawn a process yet, wait a bit and try again.
+    (run-with-timer 0.1 nil #'mu4e-overview--count maildir callback))
+   (t
+    (let (unread-count total-count)
+      (dolist (unread-only '(t nil))
+        (let ((count 0)
+              (output "")
+              (process
+               (start-process-shell-command
+                "mu4e-overview-maildir-counter" nil
+                (format "%s find -f p '%s' %s | wc -l"
+                        mu4e-mu-binary
+                        (format "maildir:/%s" maildir)
+                        (if unread-only " and flag:unread" "")))))
 
-        (set-process-filter
-         process
-         (lambda (_proc text) (setq output (concat output text))))
-        (set-process-sentinel
-         process
-         (lambda (proc _status)
-           (unless (process-live-p proc)
-             (save-match-data
-               (when (string-match "^\\([0-9]+\\)\n$" output)
-                 (setq count (string-to-number
-                              (match-string 1 output)))))
-             (if unread-only
-                 (setq unread-count count)
-               (setq total-count count))
-             (when (and total-count unread-count)
-               (funcall callback unread-count total-count)))))
+          (set-process-filter
+           process
+           (lambda (_proc text) (setq output (concat output text))))
+          (set-process-sentinel
+           process
+           (lambda (proc _status)
+             (unless (process-live-p proc)
+               (save-match-data
+                 (when (string-match "^\\([0-9]+\\)\n$" output)
+                   (setq count (string-to-number
+                                (match-string 1 output)))))
+               (if unread-only
+                   (setq unread-count count)
+                 (setq total-count count))
+               (when (and total-count unread-count)
+                 (funcall callback unread-count total-count)))))
 
-        (push process mu4e-overview--processes)
+          (push process mu4e-overview--processes)
 
-        ;; Kill this process after some time.
-        (run-with-timer 10.0 nil #'delete-process process)))))
+          ;; Kill this process after some time.
+          (run-with-timer 10.0 nil #'delete-process process)))))))
 
 (defun mu4e-overview-update ()
   "Update the list of maildirs and count the number of unread/total messages."
