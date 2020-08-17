@@ -224,6 +224,7 @@ passed to CALLBACK will be 0."
                       :unread-count nil
                       :children nil))
                    (mu4e-get-maildirs)))
+         (nfolders (length folders))
          (separators (concat
                       (if (memq ?- mu4e-overview-maildir-separators)
                           ;; Move "-" to the front to avoid later using
@@ -246,7 +247,7 @@ passed to CALLBACK will be 0."
            (setf (mu4e-overview-folder-count folder) total-count)
            (setf (mu4e-overview-folder-unread-count folder) unread-count)
            (progress-reporter-update pr (cl-incf n-processes-done))
-           (when (= n-processes-done (length folders))
+           (when (= n-processes-done nfolders)
              (progress-reporter-done pr))
            (when timer-for-refresh (cancel-timer timer-for-refresh))
            (setq timer-for-refresh
