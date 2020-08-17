@@ -1,3 +1,18 @@
+2020-08-17  Michał Krzywkowski  <k.michal@zoho.com>
+
+	Version 0.2.0
+
+	- Adapt to mu4e v1.3.7
+
+	- New variable mu4e-overview-parallel-processes can be used to
+	control the number of spawned processes during update.  Raising
+	that limit can speedup the update, but it can also lead to
+	resource exhaustion when are many maildirs to update. (on some
+	OSes)
+
+	- Fix progress reporter during update: it showed "done" before all
+	maildirs were updated.
+
 2019-10-20  Michał Krzywkowski  <k.michal@zoho.com>
 
 	Version 0.1.0
