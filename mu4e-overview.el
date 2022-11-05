@@ -194,8 +194,9 @@ passed to CALLBACK will be 0."
            process
            (lambda (proc _status)
              (unless (process-live-p proc)
+               (setq output (string-trim output))
                (save-match-data
-                 (when (string-match "^\\([0-9]+\\)\n$" output)
+                 (when (string-match "^\\([0-9]+\\)$" output)
                    (setq count (string-to-number
                                 (match-string 1 output)))))
                (if unread-only
