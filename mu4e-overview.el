@@ -117,7 +117,7 @@ inserted entry."
            (insert (format " [%d/%d]" unread-count count))
            (when (cl-plusp unread-count)
              (setq face 'mu4e-overview-unread))))
-    (make-text-button (point-at-bol) (point)
+    (make-text-button (line-beginning-position) (point)
                       :type 'mu4e-overview-folder
                       'face face
                       'mu4e-overview-folder folder)
@@ -129,18 +129,18 @@ inserted entry."
   "Erase current buffer, then insert all folders in `mu4e-overview-folders'."
   (let ((inhibit-read-only t)
         (line (line-number-at-pos (point)))
-        (offset-from-bol (- (point) (point-at-bol))))
+        (offset-from-bol (- (point) (line-beginning-position))))
     (erase-buffer)
     (dolist (entry mu4e-overview-folders)
       (mu4e-overview--insert-entry 0 entry))
     (goto-char (point-min))
     (forward-line (1- line))
     (beginning-of-line)
-    (forward-char (min (- (point-at-eol) (point-at-bol))
+    (forward-char (min (- (line-end-position) (line-beginning-position))
                        offset-from-bol))))
 
 (defvar mu4e-overview--processes nil
-  "List of running or stopped 'mu find' processes.")
+  "List of running or stopped \\='mu find\\=' processes.")
 
 (defvar mu4e-overview-parallel-processes 5
   "Start at most this many processes in parallel.
