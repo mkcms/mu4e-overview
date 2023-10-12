@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 */12 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        emacs_version:
+          - '26.3'
+          - '27.1'
+          - '28.2'
+
+          # Mu4e on Emacs-29 and above fails to compile cleanly.
+          # - '29.1'
+          # - 'snapshot'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Emacs
+        uses: purcell/setup-emacs@master
+        with:
+          version: ${{ matrix.emacs_version }}
+
+      - name: Install mu4e
+        run: sudo apt-get install -y mu4e
+
+      - name: Compile
+        run: make compile USE_SYSTEM_MU4E=1
