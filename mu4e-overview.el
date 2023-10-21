@@ -184,7 +184,7 @@ passed to CALLBACK will be 0."
                 "mu4e-overview-maildir-counter" nil
                 (format "%s find -f p '%s' %s | wc -l"
                         mu4e-mu-binary
-                        (format "maildir:/%s" maildir)
+                        (format "maildir:/%s" (shell-quote-argument maildir))
                         (if unread-only " and flag:unread" "")))))
 
           (set-process-filter
