@@ -99,6 +99,8 @@
   "Start mu4e with FUNC.
 This is a wrapper function for `mu4e--start' or `mu4e~start',
 depending on version."
+  (when (fboundp 'mu4e--init-handlers)
+    (mu4e--init-handlers))
   (if (fboundp 'mu4e--start)
       (mu4e--start func)
     (mu4e~start func)))
