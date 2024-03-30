@@ -1,3 +1,10 @@
+2024-03-30  Michał Krzywkowski  <k.michal@zoho.com>
+
+	Version 0.4.0
+
+	- Adapted to mu4e v1.8.13 and up - should work with versions up to
+	v1.12.2.
+
 2023-10-27  Michał Krzywkowski  <k.michal@zoho.com>
 
 	Version 0.3.0
