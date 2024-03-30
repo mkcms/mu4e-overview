@@ -5,7 +5,9 @@ ELC := $(FILES:.el=.elc)
 ARGS := --batch -Q
 
 ifdef USE_SYSTEM_MU4E
-COMPILE_ARGS := --eval '(add-to-list '"'"'load-path "/usr/share/emacs/site-lisp/mu4e/")'
+MU4E_FILE := $(shell find /usr/share/emacs -name mu4e.el)
+MU4E_DIR := $(shell dirname ${MU4E_FILE})
+COMPILE_ARGS := --eval '(add-to-list '"'"'load-path "'${MU4E_DIR}'")'
 endif
 
 compile: $(ELC)
