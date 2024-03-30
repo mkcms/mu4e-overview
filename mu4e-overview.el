@@ -311,12 +311,13 @@ headers view only for unread messages."
   (interactive)
   (let* ((folder (button-get button 'mu4e-overview-folder))
          (maildir (mu4e-overview-folder-maildir folder)))
-    (mu4e-headers-search
+    (mu4e-search
      (format "maildir:\"/%s\"%s" maildir
              (if (or unread-only (and current-prefix-arg
                                       (eq this-command 'push-button)))
                  " and flag:unread"
-               "")))))
+               ""))
+     nil nil 'ignore-history)))
 
 (defun mu4e-overview-next-unread-folder (&optional n)
   "Go to next unread folder.
