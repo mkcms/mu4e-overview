@@ -95,16 +95,6 @@
 
 (defvar mu4e-overview-folders nil "List of known folders.")
 
-(defun mu4e-overview--start (&optional func)
-  "Start mu4e with FUNC.
-This is a wrapper function for `mu4e--start' or `mu4e~start',
-depending on version."
-  (when (fboundp 'mu4e--init-handlers)
-    (mu4e--init-handlers))
-  (if (fboundp 'mu4e--start)
-      (mu4e--start func)
-    (mu4e~start func)))
-
 (defun mu4e-overview--insert-entry (depth folder)
   "Insert an entry in current buffer for FOLDER at DEPTH.
 DEPTH must be an integer that says how many spaces the line
@@ -377,9 +367,7 @@ The buffer shows a hierarchy of maildirs used by `mu4e'.
 The available keybindings are:
 \\{mu4e-overview-mode-map}"
   (interactive)
-  (mu4e-overview--start 'mu4e-overview-internal))
-
-(defun mu4e-overview-internal ()
+  (mu4e 'background)
   (with-current-buffer (get-buffer-create "*mu4e overview*")
     (mu4e-overview-mode)
     (mu4e-overview-update)
