@@ -55,6 +55,7 @@
 
 (require 'cl-lib)
 (require 'mu4e)
+(require 'mu4e-search nil t)
 (require 'subr-x)
 
 (defgroup mu4e-overview nil
@@ -311,7 +312,8 @@ headers view only for unread messages."
   (interactive)
   (let* ((folder (button-get button 'mu4e-overview-folder))
          (maildir (mu4e-overview-folder-maildir folder)))
-    (mu4e-search
+    (funcall
+     (if (fboundp 'mu4e-search) 'mu4e-search 'mu4e-headers-search)
      (format "maildir:\"/%s\"%s" maildir
              (if (or unread-only (and current-prefix-arg
                                       (eq this-command 'push-button)))
