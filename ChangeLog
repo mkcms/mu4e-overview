@@ -1,3 +1,10 @@
+2024-05-15  Michał Krzywkowski  <k.michal@zoho.com>
+
+	Version 0.4.1
+
+	- Fixed an issue on older mu4e versions where the `mu4e-search'
+	function may not be defined.
+
 2024-03-30  Michał Krzywkowski  <k.michal@zoho.com>
 
 	Version 0.4.0
