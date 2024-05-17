@@ -17,10 +17,8 @@ jobs:
           - '26.3'
           - '27.1'
           - '28.2'
-
-          # Mu4e on Emacs-29 and above fails to compile cleanly.
-          # - '29.1'
-          # - 'snapshot'
+          - '29.3'
+          - 'snapshot'
 
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +29,15 @@ jobs:
           version: ${{ matrix.emacs_version }}
 
       - name: Install mu4e
-        run: sudo apt-get install -y mu4e
+        run: |
+          sudo sed -i '/^deb/P;s/^deb/deb-src/' /etc/apt/sources.list
+          sudo apt-get update
+          sudo apt-get install git meson emacs
+          sudo apt-get build-dep maildir-utils
+          cd /usr/local/src
+          sudo git clone https://github.com/djcb/mu.git
+          cd mu
+          sudo ./autogen.sh && sudo make && sudo make install
 
       - name: Compile
         run: make compile USE_SYSTEM_MU4E=1
