@@ -13,7 +13,9 @@ endif
 compile: $(ELC)
 
 %.elc: %.el
-	${emacs} ${ARGS} ${COMPILE_ARGS} -L . -f batch-byte-compile $<
+	${emacs} ${ARGS} ${COMPILE_ARGS} -L .                                 \
+	   --eval '(setq byte-compile-error-on-warn t)'                       \
+	    -f batch-byte-compile $<
 
 update-copyright-years:
 	year=`date +%Y`;                                                      \
