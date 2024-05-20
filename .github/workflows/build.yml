@@ -41,3 +41,6 @@ jobs:
 
       - name: Compile
         run: make compile USE_SYSTEM_MU4E=1
+
+      - name: Lint
+        run: make lint

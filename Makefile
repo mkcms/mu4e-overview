@@ -20,6 +20,15 @@ compile: $(ELC)
 	   --eval '(setq byte-compile-error-on-warn t)'                       \
 	    -f batch-byte-compile $<
 
+lint:
+	file=$$(mktemp)                                                       \
+	&& ${emacs} -Q --batch mu4e-overview.el                               \
+		--eval '(checkdoc-file (buffer-file-name))' 2>&1 | tee $$file \
+	&& test -z "$$(cat $$file)"                                           \
+	&& (grep -n -E "^.{80,}" mu4e-overview.el `# Catch long lines`        \
+	    | sed                                                             \
+		-r '1d;s/^([0-9]+).*/mu4e-overview.el:\1: Too long/;q1')
+
 update-copyright-years:
 	year=`date +%Y`;                                                      \
 	sed -i *.el *.md -r                                                   \

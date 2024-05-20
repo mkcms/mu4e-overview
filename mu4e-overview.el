@@ -59,7 +59,7 @@
 (require 'subr-x)
 
 (defgroup mu4e-overview nil
-  "Show overview of maildir"
+  "Show overview of maildir."
   :group 'mail
   :group 'tools)
 
