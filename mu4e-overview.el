@@ -83,6 +83,9 @@
   '((t :inherit mu4e-overview-folder :weight bold))
   "Face used for folders which contain unread mail.")
 
+(defvar mu4e-overview-buffer "*mu4e overview*"
+  "Name of the buffer where maildir hierarchy is displayed.")
+
 (cl-defstruct mu4e-overview-folder
   name maildir unread-count count children parent)
 
@@ -322,15 +325,19 @@ after all the folders have been counted."
 (defvar mu4e-overview--interrupt-fn nil
   "Function to interrupt last refresh.")
 
+(defun mu4e-overview--cleanup ()
+  "Kill running \\='mu find\\=' processes."
+  (when mu4e-overview--interrupt-fn
+    (funcall mu4e-overview--interrupt-fn)))
+
 (defun mu4e-overview-update ()
   "Update the list of maildirs and count the number of unread/total messages."
   (interactive)
-  (when mu4e-overview--interrupt-fn
-    (funcall mu4e-overview--interrupt-fn))
+  (mu4e-overview--cleanup)
   (pcase-let* ((pr nil)
                (num-folders-done 0)
                (timer-for-refresh nil)
-               (buffer (current-buffer))
+               (buffer (get-buffer mu4e-overview-buffer))
                (`(,folders ,nfolders ,interruptfn)
                 (mu4e-overview-gather
                  (lambda (_folder)
@@ -341,14 +348,17 @@ after all the folders have been counted."
                           0.3 nil
                           (lambda ()
                             (setq timer-for-refresh nil)
-                            (with-current-buffer buffer
-                              (mu4e-overview--insert-entries))))))
+                            (when (buffer-live-p buffer)
+                              (with-current-buffer buffer
+                                (mu4e-overview--insert-entries)))))))
                  (lambda ()
                    (setq mu4e-overview--interrupt-fn nil)
                    (progress-reporter-done pr)))))
     (setq mu4e-overview--interrupt-fn interruptfn)
     (setq pr (make-progress-reporter "Updating maildir status" 0 nfolders))
-    (setq mu4e-overview-folders folders)))
+    (setq mu4e-overview-folders folders)
+    (with-current-buffer buffer
+      (add-hook 'kill-buffer-hook #'mu4e-overview--cleanup nil t))))
 
 (defun mu4e-overview-action (button &optional unread-only)
   "Show mu4e headers view for folder associated with BUTTON.
@@ -417,7 +427,7 @@ The available keybindings are:
 \\{mu4e-overview-mode-map}"
   (interactive)
   (mu4e 'background)
-  (with-current-buffer (get-buffer-create "*mu4e overview*")
+  (with-current-buffer (get-buffer-create mu4e-overview-buffer)
     (mu4e-overview-mode)
     (mu4e-overview-update)
     (pop-to-buffer (current-buffer))))
