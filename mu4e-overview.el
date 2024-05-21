@@ -84,7 +84,7 @@
   "Face used for folders which contain unread mail.")
 
 (cl-defstruct mu4e-overview-folder
-  name maildir unread-count count children)
+  name maildir unread-count count children parent)
 
 (define-button-type 'mu4e-overview-folder
   'action #'mu4e-overview-action
@@ -151,8 +151,8 @@ lead to resource exhaustion and even cause the update process to
 fail, because the system file descriptor limit can quickly be
 reached.")
 
-(defun mu4e-overview--count (maildir callback)
-  "Count number of total/unread messages in MAILDIR and call CALLBACK.
+(defun mu4e-overview--count (maildir callback pred)
+  "Count total/unread messages in MAILDIR and call CALLBACK (if PRED).
 This function starts two mu processes which find all/unread
 messages in MAILDIR, and counts the number of those messages.
 When both processes are done, it calls CALLBACK with two
@@ -169,12 +169,14 @@ passed to CALLBACK will be 0."
   (setq mu4e-overview--processes
         (cl-remove-if-not #'process-live-p mu4e-overview--processes))
   (cond
+   ((not (funcall pred))
+    (funcall callback 0 0))
    ;; Limit the number of spawned parallel processes to avoid reaching open
    ;; file limit on some systems. (gh#8)
    ((>= (cl-count-if #'process-live-p mu4e-overview--processes)
         mu4e-overview-parallel-processes)
     ;; If we can't spawn a process yet, wait a bit and try again.
-    (run-with-timer 0.1 nil #'mu4e-overview--count maildir callback))
+    (run-with-timer 0.1 nil #'mu4e-overview--count maildir callback pred))
    (t
     (let (unread-count total-count)
       (dolist (unread-only '(t nil))
@@ -211,12 +213,13 @@ passed to CALLBACK will be 0."
           ;; Kill this process after some time.
           (run-with-timer 10.0 nil #'delete-process process)))))))
 
-(defun mu4e-overview-update ()
-  "Update the list of maildirs and count the number of unread/total messages."
-  (interactive)
+(defun mu4e-overview--gather-1 (update-callback done-callback)
+  "Gather counts for all folders and call UPDATE-CALLBACK and DONE-CALLBACK.
+This is a subr of `mu4e-overview-gather'."
   (mapc #'delete-process mu4e-overview--processes)
   (setq mu4e-overview--processes nil)
-  (let* ((folders (mapcar
+  (let* ((keep-going t)
+         (folders (mapcar
                    (lambda (dir)
                      (setq dir (substring dir 1)) ;remove prefix "/" character
                      (make-mu4e-overview-folder
@@ -234,11 +237,8 @@ passed to CALLBACK will be 0."
                           (cons ?- (remq ?- mu4e-overview-maildir-separators))
                         mu4e-overview-maildir-separators)))
          (n-processes-done 0)
-         (pr (make-progress-reporter "Updating maildir status"
-                                     0 (length folders)))
-         (timer-for-refresh nil)
-         (done nil)
-         (buffer (current-buffer)))
+
+         (done nil))
 
     ;; Gather unread/total counts for each folder.
     (dolist (folder folders)
@@ -248,17 +248,11 @@ passed to CALLBACK will be 0."
          (lambda (unread-count total-count)
            (setf (mu4e-overview-folder-count folder) total-count)
            (setf (mu4e-overview-folder-unread-count folder) unread-count)
-           (progress-reporter-update pr (cl-incf n-processes-done))
+           (funcall update-callback folder)
+           (cl-incf n-processes-done)
            (when (= n-processes-done nfolders)
-             (progress-reporter-done pr))
-           (when timer-for-refresh (cancel-timer timer-for-refresh))
-           (setq timer-for-refresh
-                 (run-with-idle-timer
-                  0.3 nil
-                  (lambda ()
-                    (setq timer-for-refresh nil)
-                    (with-current-buffer buffer
-                      (mu4e-overview--insert-entries)))))))))
+             (funcall done-callback)))
+         (lambda () keep-going))))
 
     ;; Create folder hierarchy.  `folders' is a flat list of folders.  We need
     ;; to have a list of root folders, which have children, and their children
@@ -295,13 +289,65 @@ passed to CALLBACK will be 0."
                        :name parent-name
                        :maildir nil))
                 (push parent-folder folders))
-              (setf (mu4e-overview-folder-children parent-folder)
+              (setf (mu4e-overview-folder-parent folder) parent-folder
+                    (mu4e-overview-folder-children parent-folder)
                     (cl-sort
                      (cons folder
                            (mu4e-overview-folder-children parent-folder))
                      #'string< :key #'mu4e-overview-folder-name))
               (setq folders (delete folder folders)))))))
 
+    (list folders
+          nfolders
+          (lambda ()
+            (setq keep-going nil)
+            (mapc #'delete-process mu4e-overview--processes)
+            (setq mu4e-overview--processes nil)))))
+
+(defun mu4e-overview-gather (update-callback done-callback)
+  "Gather counts for all folders and call UPDATE-CALLBACK and DONE-CALLBACK.
+The return value is (FOLDERS NFOLDERS STOPFN), where FOLDERS is a
+list of root folders (of type `mu4e-overview-folder'), NFOLDERS
+is the total number of folders which will be counted, and STOPFN
+is a function which can be called without arguments to interrupt
+the counting.
+
+This function calls UPDATE-CALLBACK after getting the counts for
+a single folder.  This callback must be callable with one
+argument, the folder.  DONE-CALLBACK is called with no arguments
+after all the folders have been counted."
+  (let (mu4e-overview--processes)
+    (mu4e-overview--gather-1 update-callback done-callback)))
+
+(defvar mu4e-overview--interrupt-fn nil
+  "Function to interrupt last refresh.")
+
+(defun mu4e-overview-update ()
+  "Update the list of maildirs and count the number of unread/total messages."
+  (interactive)
+  (when mu4e-overview--interrupt-fn
+    (funcall mu4e-overview--interrupt-fn))
+  (pcase-let* ((pr nil)
+               (num-folders-done 0)
+               (timer-for-refresh nil)
+               (buffer (current-buffer))
+               (`(,folders ,nfolders ,interruptfn)
+                (mu4e-overview-gather
+                 (lambda (_folder)
+                   (progress-reporter-update pr (cl-incf num-folders-done))
+                   (when timer-for-refresh (cancel-timer timer-for-refresh))
+                   (setq timer-for-refresh
+                         (run-with-idle-timer
+                          0.3 nil
+                          (lambda ()
+                            (setq timer-for-refresh nil)
+                            (with-current-buffer buffer
+                              (mu4e-overview--insert-entries))))))
+                 (lambda ()
+                   (setq mu4e-overview--interrupt-fn nil)
+                   (progress-reporter-done pr)))))
+    (setq mu4e-overview--interrupt-fn interruptfn)
+    (setq pr (make-progress-reporter "Updating maildir status" 0 nfolders))
     (setq mu4e-overview-folders folders)))
 
 (defun mu4e-overview-action (button &optional unread-only)

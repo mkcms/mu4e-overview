@@ -32,6 +32,13 @@ When you click on a maildir or type RET when point is on it, mu4e headers view
 is displayed, which shows messages only in that maildir.  Type `C-u RET` to
 show only unread messages.
 
+## API ##
+
+The package also provides the function `mu4e-overview-gather` which returns the
+folder hierarchy and asynchronously counts the number of total and unread
+counts for each folder.  This can be used to build a custom view of the folder
+hierarchy.  See it's documentation for details.
+
 ## License ##
 
 ```
