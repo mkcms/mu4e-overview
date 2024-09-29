@@ -30,7 +30,7 @@ jobs:
 
       - name: Install mu4e
         run: |
-          sudo sed -i '/^deb/P;s/^deb/deb-src/' /etc/apt/sources.list
+          sudo sed -i 's/^Types: deb/Types: deb deb-src/' /etc/apt/sources.list.d/*
           sudo apt-get update
           sudo apt-get install git meson emacs
           sudo apt-get build-dep maildir-utils
