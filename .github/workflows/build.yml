@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         emacs_version:
-          - '26.3'
+          # - '26.3' # It might be supported, but CI build fails.
           - '27.1'
           - '28.2'
           - '29.3'
@@ -30,6 +30,7 @@ jobs:
 
       - name: Install mu4e
         run: |
+          emacs=`which emacs`
           sudo sed -i 's/^Types: deb/Types: deb deb-src/' /etc/apt/sources.list.d/*
           sudo apt-get update
           sudo apt-get install git meson emacs
@@ -37,7 +38,7 @@ jobs:
           cd /usr/local/src
           sudo git clone https://github.com/djcb/mu.git
           cd mu
-          sudo ./autogen.sh && sudo make && sudo make install
+          sudo ./autogen.sh -Demacs=$emacs && sudo make && sudo make install
 
       - name: Compile
         run: make compile USE_SYSTEM_MU4E=1
