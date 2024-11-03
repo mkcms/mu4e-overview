@@ -245,7 +245,7 @@ This is a subr of `mu4e-overview-gather'."
 
     ;; Gather unread/total counts for each folder.
     (dolist (folder folders)
-      (when-let ((maildir (mu4e-overview-folder-maildir folder)))
+      (when-let* ((maildir (mu4e-overview-folder-maildir folder)))
         (mu4e-overview--count
          maildir
          (lambda (unread-count total-count)
