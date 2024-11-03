@@ -17,7 +17,7 @@ jobs:
           # - '26.3' # It might be supported, but CI build fails.
           - '27.1'
           - '28.2'
-          - '29.3'
+          - '29.4'
           - 'snapshot'
 
     steps:
