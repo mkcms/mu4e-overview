@@ -1,3 +1,15 @@
+2024-12-01  Michał Krzywkowski  <k.michal@zoho.com>
+
+	Version 0.5.0
+
+	- New API function `mu4e-overview-gather' can be used to build
+	custom views of the hierarchy, e.g. with `speedbar'.
+
+	- Fixed a bug where killing the buffer did not kill the running
+	processes.
+
+	- Fixed various compilation warnings.
+
 2024-05-15  Michał Krzywkowski  <k.michal@zoho.com>
 
 	Version 0.4.1
