@@ -1,6 +1,6 @@
 ;;; mu4e-overview.el --- Show overview of maildir    -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2024  Michał Krzywkowski
+;; Copyright (C) 2019-2025  Michał Krzywkowski
 
 ;; Author: Michał Krzywkowski <k.michal@zoho.com>
 ;; Keywords: mail, tools
