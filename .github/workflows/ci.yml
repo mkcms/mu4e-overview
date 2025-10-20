@@ -29,6 +29,9 @@ jobs:
         with:
           version: ${{ matrix.emacs_version }}
 
+      - name: Install dependencies
+        run: make deps
+
       - name: Install mu4e
         run: |
           emacs=`which emacs`
